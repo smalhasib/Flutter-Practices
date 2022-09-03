@@ -22,16 +22,13 @@ class App extends StatelessWidget {
         ),
         primarySwatch: Colors.purple,
         fontFamily: 'Lato',
-        textTheme: ThemeData
-            .light()
-            .textTheme
-            .copyWith(
-          titleMedium: const TextStyle(
-            fontFamily: 'Roboto',
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        textTheme: ThemeData.light().textTheme.copyWith(
+              titleMedium: const TextStyle(
+                fontFamily: 'Roboto',
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
         appBarTheme: const AppBarTheme(
           titleTextStyle: TextStyle(
             fontFamily: 'Roboto',
@@ -71,17 +68,24 @@ class _HomePageState extends State<HomePage> {
   ];
 
   List<Transaction> get _recentTransactions {
-    return _userTransactions.where((element) =>
-        element.date.isAfter(DateTime.now().subtract(const Duration(days: 7))))
+    return _userTransactions
+        .where((element) => element.date
+            .isAfter(DateTime.now().subtract(const Duration(days: 7))))
         .toList();
   }
 
-  void _addNewTransaction(String title, double amount) {
+  void _addNewTransaction(String title, double amount, DateTime chosenDate) {
     final newTx = Transaction(
-        id: _uuid.v1(), title: title, amount: amount, date: DateTime.now());
+        id: _uuid.v1(), title: title, amount: amount, date: chosenDate);
 
     setState(() {
       _userTransactions.add(newTx);
+    });
+  }
+
+  void _deleteTransaction(String id) {
+    setState(() {
+      _userTransactions.removeWhere((element) => element.id == id);
     });
   }
 
@@ -113,7 +117,7 @@ class _HomePageState extends State<HomePage> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Chart(_recentTransactions),
-              TransactionList(_userTransactions)
+              TransactionList(_userTransactions, _deleteTransaction)
             ],
           ),
         ),

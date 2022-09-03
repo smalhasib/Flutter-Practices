@@ -4,55 +4,40 @@ import 'package:intl/intl.dart';
 
 class TransactionItem extends StatelessWidget {
   final Transaction transaction;
+  final Function deleteTx;
 
-  const TransactionItem(this.transaction);
+  const TransactionItem(this.transaction, this.deleteTx);
 
   @override
   Widget build(BuildContext context) {
     ThemeData theme = Theme.of(context);
 
     return Card(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Container(
-            margin: const EdgeInsets.symmetric(
-              vertical: 10,
-              horizontal: 20,
-            ),
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: theme.primaryColor,
-                width: 2,
-              ),
-            ),
-            padding: const EdgeInsets.all(10),
-            child: Text(
-              '\$${transaction.amount.toStringAsFixed(2)}',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-                color: theme.primaryColor,
-              ),
+      elevation: 5,
+      margin: const EdgeInsets.symmetric(
+        vertical: 8,
+        horizontal: 5,
+      ),
+      child: ListTile(
+        leading: CircleAvatar(
+          radius: 30,
+          child: Padding(
+            padding: const EdgeInsets.all(6),
+            child: FittedBox(
+              child: Text('\$${transaction.amount}'),
             ),
           ),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                transaction.title,
-                style: theme.textTheme.titleMedium,
-              ),
-              Text(
-                DateFormat.yMMMd().format(transaction.date),
-                style: const TextStyle(
-                  color: Colors.grey,
-                ),
-              ),
-            ],
-          )
-        ],
+        ),
+        title: Text(
+          transaction.title,
+          style: theme.textTheme.titleMedium,
+        ),
+        subtitle: Text(DateFormat.yMMMd().format(transaction.date)),
+        trailing: IconButton(
+          icon: const Icon(Icons.delete),
+          color: Theme.of(context).errorColor,
+          onPressed: () => deleteTx(transaction.id),
+        ),
       ),
     );
   }

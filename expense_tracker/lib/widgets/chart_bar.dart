@@ -12,12 +12,20 @@ class CharBar extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        FittedBox(child: Text('\$${spendingAmount.toStringAsFixed(0)}')),
+        SizedBox(
+          height: 20,
+          child: FittedBox(
+            child: Text(
+              '\$${spendingAmount.toStringAsFixed(0)}',
+            ),
+          ),
+        ),
         Container(
           padding: const EdgeInsets.symmetric(vertical: 4),
           height: 80,
           width: 10,
           child: Stack(
+            alignment: AlignmentDirectional.bottomStart,
             children: [
               Container(
                 decoration: BoxDecoration(
