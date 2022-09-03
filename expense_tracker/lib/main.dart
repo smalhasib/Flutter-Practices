@@ -1,157 +1,128 @@
-import 'package:expense_tracker/Transaction.dart';
-import 'package:flutter/foundation.dart';
+import 'package:expense_tracker/widgets/chart.dart';
+import 'package:expense_tracker/widgets/new_transaction.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:uuid/uuid.dart';
+
+import '../models/Transaction.dart';
+import '../widgets/transaction_list.dart';
 
 void main() => runApp(const App());
 
 class App extends StatelessWidget {
   const App({Key? key}) : super(key: key);
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Expense Tracker',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSwatch(
+          accentColor: Colors.red,
+          primarySwatch: Colors.purple,
+        ),
+        primarySwatch: Colors.purple,
+        fontFamily: 'Lato',
+        textTheme: ThemeData
+            .light()
+            .textTheme
+            .copyWith(
+          titleMedium: const TextStyle(
+            fontFamily: 'Roboto',
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        appBarTheme: const AppBarTheme(
+          titleTextStyle: TextStyle(
+            fontFamily: 'Roboto',
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+      debugShowCheckedModeBanner: false,
       home: HomePage(key),
     );
   }
 }
 
-class HomePage extends StatelessWidget {
-  final List<Transaction> _transactions = [
-    Transaction(
-      id: 't1',
-      title: 'New Shoes',
-      amount: 69.99,
-      date: DateTime.now(),
-    ),
-    Transaction(
-      id: 't2',
-      title: 'Weekly Groceries',
-      amount: 16.53,
-      date: DateTime.now(),
-    ),
-  ];
-  final titleController = TextEditingController();
-  final amountController = TextEditingController();
+class HomePage extends StatefulWidget {
+  const HomePage(Key? key) : super(key: key);
 
-  HomePage(Key? key) : super(key: key);
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  final _uuid = const Uuid();
+  final List<Transaction> _userTransactions = [
+    // Transaction(
+    //   id: 't1',
+    //   title: 'New Shoes',
+    //   amount: 69.99,
+    //   date: DateTime.now(),
+    // ),
+    // Transaction(
+    //   id: 't2',
+    //   title: 'Weekly Groceries',
+    //   amount: 16.53,
+    //   date: DateTime.now(),
+    // ),
+  ];
+
+  List<Transaction> get _recentTransactions {
+    return _userTransactions.where((element) =>
+        element.date.isAfter(DateTime.now().subtract(const Duration(days: 7))))
+        .toList();
+  }
+
+  void _addNewTransaction(String title, double amount) {
+    final newTx = Transaction(
+        id: _uuid.v1(), title: title, amount: amount, date: DateTime.now());
+
+    setState(() {
+      _userTransactions.add(newTx);
+    });
+  }
+
+  void _showAddNewTransaction(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (_) {
+        return NewTransaction(_addNewTransaction);
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Flutter App'),
-      ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          const Card(
-            color: Colors.orange,
-            child: SizedBox(
-              width: double.infinity,
-              child: Text(
-                'Chart!',
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-          Card(
-            elevation: 5,
-            child: Padding(
-              padding: const EdgeInsets.all(10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  TextField(
-                    controller: titleController,
-                    decoration: const InputDecoration(labelText: 'Title'),
-                    maxLines: 1,
-                  ),
-                  TextField(
-                    controller: amountController,
-                    decoration: const InputDecoration(labelText: 'Amount'),
-                    maxLines: 1,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: TextButton(
-                      onPressed: () {
-                        if (kDebugMode) {
-                          print(titleController.text);
-                          print(amountController.text);
-                        }
-                      },
-                      style: ButtonStyle(
-                        overlayColor:
-                            MaterialStatePropertyAll(Colors.purple[100]),
-                      ),
-                      child: const Text(
-                        'Add Transaction',
-                        style: TextStyle(
-                          color: Colors.purple,
-                        ),
-                      ),
-                    ),
-                  )
-                ],
-              ),
-            ),
-          ),
-          Column(
-            children: _transactions
-                .map((tx) => Card(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Container(
-                            margin: const EdgeInsets.symmetric(
-                              vertical: 20,
-                              horizontal: 20,
-                            ),
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: Colors.purple,
-                                width: 2,
-                              ),
-                            ),
-                            padding: const EdgeInsets.all(10),
-                            child: Text(
-                              '\$${tx.amount}',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 20,
-                                color: Colors.purple,
-                              ),
-                            ),
-                          ),
-                          Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                tx.title,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              Text(
-                                DateFormat.yMMMd().format(tx.date),
-                                style: const TextStyle(
-                                  color: Colors.grey,
-                                ),
-                              ),
-                            ],
-                          )
-                        ],
-                      ),
-                    ))
-                .toList(),
-          ),
+        title: const Text('Expense Tracker'),
+        actions: [
+          IconButton(
+            onPressed: () => _showAddNewTransaction(context),
+            icon: const Icon(Icons.add),
+          )
         ],
       ),
+      body: SingleChildScrollView(
+        child: SizedBox(
+          width: double.infinity,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Chart(_recentTransactions),
+              TransactionList(_userTransactions)
+            ],
+          ),
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        child: const Icon(Icons.add),
+        onPressed: () => _showAddNewTransaction(context),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 }
