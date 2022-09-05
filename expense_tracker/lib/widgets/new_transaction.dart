@@ -1,3 +1,5 @@
+import 'package:expense_tracker/widgets/adaptive_text_button.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -44,58 +46,56 @@ class _NewTransactionState extends State<NewTransaction> {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 5,
-      child: Padding(
-        padding: const EdgeInsets.all(10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            TextField(
-              controller: _titleController,
-              decoration: const InputDecoration(labelText: 'Title'),
-              maxLines: 1,
-              onSubmitted: (_) => _submitData(),
-            ),
-            TextField(
-              keyboardType: TextInputType.number,
-              controller: _amountController,
-              decoration: const InputDecoration(labelText: 'Amount'),
-              maxLines: 1,
-              onSubmitted: (_) => _submitData(),
-            ),
-            SizedBox(
-              height: 80,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(_selectedDate != null
-                        ? 'Picked Date: ${DateFormat.yMd().format(_selectedDate!)}'
-                        : 'No Date Chosen'),
-                  ),
-                  TextButton(
-                    onPressed: _showDatePicker,
-                    child: Text(
-                      'Chose Date',
-                      style: TextStyle(
-                        color: Theme.of(context).primaryColor,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  )
-                ],
+    return SingleChildScrollView(
+      child: Card(
+        elevation: 5,
+        child: Padding(
+          padding: EdgeInsets.only(
+            left: 10,
+            top: 10,
+            right: 10,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 10,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              TextField(
+                controller: _titleController,
+                decoration: const InputDecoration(labelText: 'Title'),
+                maxLines: 1,
+                onSubmitted: (_) => _submitData(),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              child: ElevatedButton(
-                onPressed: _submitData,
-                child: const Text(
-                  'Add Transaction',
+              TextField(
+                keyboardType: TextInputType.number,
+                controller: _amountController,
+                decoration: const InputDecoration(labelText: 'Amount'),
+                maxLines: 1,
+                onSubmitted: (_) => _submitData(),
+              ),
+              SizedBox(
+                height: 80,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(_selectedDate != null
+                          ? 'Picked Date: ${DateFormat.yMd().format(_selectedDate!)}'
+                          : 'No Date Chosen'),
+                    ),
+                    AdaptiveTextButton('Choose Date', _showDatePicker)
+                  ],
                 ),
               ),
-            )
-          ],
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: ElevatedButton(
+                  onPressed: _submitData,
+                  child: const Text(
+                    'Add Transaction',
+                  ),
+                ),
+              )
+            ],
+          ),
         ),
       ),
     );
