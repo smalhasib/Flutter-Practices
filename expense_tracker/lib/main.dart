@@ -120,6 +120,46 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  List<Widget> _buildLandscapeContent(
+      double screenHeight, Widget txListWidget) {
+    return [
+      Container(
+        padding: EdgeInsets.only(top: screenHeight * 0.05),
+        height: screenHeight * 0.1,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Show Chart',
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            Switch.adaptive(
+              value: _showSwitch,
+              activeColor: Theme.of(context).colorScheme.secondary,
+              onChanged: _toggleSwitch,
+            )
+          ],
+        ),
+      ),
+      _showSwitch
+          ? SizedBox(
+              height: screenHeight * 0.8,
+              child: Chart(_recentTransactions),
+            )
+          : txListWidget
+    ];
+  }
+
+  List<Widget> _buildPortraitContent(double screenHeight, Widget txListWidget) {
+    return [
+      SizedBox(
+        height: screenHeight * 0.4,
+        child: Chart(_recentTransactions),
+      ),
+      txListWidget
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     final PreferredSizeWidget appBar = Platform.isIOS
@@ -164,37 +204,9 @@ class _HomePageState extends State<HomePage> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               if (isLandscape)
-                Container(
-                  padding: EdgeInsets.only(top: screenHeight * 0.05),
-                  height: screenHeight * 0.1,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Show Chart',
-                        style: Theme.of(context).textTheme.titleSmall,
-                      ),
-                      Switch.adaptive(
-                        value: _showSwitch,
-                        activeColor: Theme.of(context).colorScheme.secondary,
-                        onChanged: _toggleSwitch,
-                      )
-                    ],
-                  ),
-                ),
+                ..._buildLandscapeContent(screenHeight, transactionListWidget),
               if (!isLandscape)
-                SizedBox(
-                  height: screenHeight * 0.4,
-                  child: Chart(_recentTransactions),
-                ),
-              if (!isLandscape) transactionListWidget,
-              if (isLandscape)
-                _showSwitch
-                    ? SizedBox(
-                        height: screenHeight * 0.8,
-                        child: Chart(_recentTransactions),
-                      )
-                    : transactionListWidget
+                ..._buildPortraitContent(screenHeight, transactionListWidget),
             ],
           ),
         ),

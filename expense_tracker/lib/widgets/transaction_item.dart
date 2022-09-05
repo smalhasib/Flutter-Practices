@@ -6,7 +6,7 @@ class TransactionItem extends StatelessWidget {
   final Transaction transaction;
   final Function deleteTx;
 
-  const TransactionItem(this.transaction, this.deleteTx);
+  const TransactionItem(this.transaction, this.deleteTx, {super.key});
 
   @override
   Widget build(BuildContext context) {
