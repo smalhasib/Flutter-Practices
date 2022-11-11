@@ -35,8 +35,9 @@ class _AppState extends State<App> {
         if (_filters['gluten'] as bool && !element.isGlutenFree) return false;
         if (_filters['lactose'] as bool && !element.isLactoseFree) return false;
         if (_filters['vegan'] as bool && !element.isVegan) return false;
-        if (_filters['vegetarian'] as bool && !element.isVegetarian)
+        if (_filters['vegetarian'] as bool && !element.isVegetarian) {
           return false;
+        }
         return true;
       }).toList();
     });
