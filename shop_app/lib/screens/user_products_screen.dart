@@ -9,9 +9,12 @@ import '../provider/products.dart';
 class UserProductsScreen extends StatelessWidget {
   static const String routeName = '/user-products';
 
+  Future<void> _refreshProducts(BuildContext context) async {
+    await Provider.of<Products>(context, listen: false).fetchProducts(true);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final products = Provider.of<Products>(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Your Products'),
@@ -25,24 +28,37 @@ class UserProductsScreen extends StatelessWidget {
         ],
       ),
       drawer: AppDrawer(),
-      body: Padding(
-        padding: const EdgeInsets.all(8),
-        child: ListView.builder(
-          itemBuilder: (_, index) {
-            final item = products.items[index];
-            return Column(
-              children: [
-                UserProductItem(
-                  item.id,
-                  item.title,
-                  item.imageUrl,
-                ),
-                const Divider(thickness: 1),
-              ],
-            );
-          },
-          itemCount: products.items.length,
-        ),
+      body: FutureBuilder(
+        future: _refreshProducts(context),
+        builder: (context, snapshot) =>
+            snapshot.connectionState == ConnectionState.waiting
+                ? const Center(
+                    child: CircularProgressIndicator(),
+                  )
+                : RefreshIndicator(
+                    onRefresh: () => _refreshProducts(context),
+                    child: Consumer<Products>(
+                      builder: (context, products, _) => Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: ListView.builder(
+                          itemBuilder: (_, index) {
+                            final item = products.items[index];
+                            return Column(
+                              children: [
+                                UserProductItem(
+                                  item.id,
+                                  item.title,
+                                  item.imageUrl,
+                                ),
+                                const Divider(thickness: 1),
+                              ],
+                            );
+                          },
+                          itemCount: products.items.length,
+                        ),
+                      ),
+                    ),
+                  ),
       ),
     );
   }
