@@ -85,9 +85,11 @@ class Auth with ChangeNotifier {
     if (!prefs.containsKey('userData')) {
       return false;
     }
-    Map<String, String> userData = json.decode(prefs.getString('userData')!);
+    Map<String, dynamic> userData = json.decode(prefs.getString('userData')!);
 
+    print("working ...");
     final expiryDate = DateTime.parse(userData['expiryDate']!);
+    print(expiryDate);
     if (expiryDate.isBefore(DateTime.now())) {
       return false;
     }
