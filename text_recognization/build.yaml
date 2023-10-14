@@ -1,0 +1,16 @@
+targets:
+  $default:
+    builders:
+      freezed:
+        options:
+          # Disable the generation of copyWith/== for the entire project
+          copy_with: true
+          equal: true
+          toStringOverride: true
+          # `when` and `map` can be enabled/disabled entirely by setting them to `true`/`false`
+          map: false
+          # We can also enable/disable specific variants of `when`/`map` by setting them to `true`/`false`:
+          when:
+            when: false
+            maybe_when: false
+            when_or_null: false

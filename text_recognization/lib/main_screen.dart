@@ -1,13 +1,17 @@
 import 'dart:io';
 
+import 'package:auto_route/auto_route.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:text_recognization/app_manager.dart';
+import 'package:text_recognization/app_router.dart';
 import 'package:text_recognization/text_detector_painter.dart';
 
+@RoutePage()
 class MainScreen extends HookConsumerWidget {
   const MainScreen({super.key});
 
@@ -24,6 +28,12 @@ class MainScreen extends HookConsumerWidget {
     final textRecognizer = useMemoized<TextRecognizer>(
       () => TextRecognizer(script: TextRecognitionScript.latin),
     );
+
+    useEffect(() {
+      ref.read(appManagerNotifierProvider.notifier).init();
+
+      return null;
+    }, const []);
 
     Future<void> processImage(InputImage inputImage) async {
       if (!canProcess.value) return;
@@ -67,41 +77,47 @@ class MainScreen extends HookConsumerWidget {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: const Text('Text Recognizer'),
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            image.value != null
-                ? SizedBox(
-                    height: 400,
-                    width: 400,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: <Widget>[
-                        Image.file(image.value!),
-                      ],
-                    ),
-                  )
-                : const Icon(
-                    Icons.image,
-                    size: 200,
-                  ),
-            const SizedBox(height: 8),
-            if (image.value != null)
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text(path.value == null ? '' : 'Image path: ${path.value}'),
-              ),
-            const SizedBox(height: 8),
-            if (outputText.value != null)
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text(outputText.value!),
-              ),
-          ],
+      body: Center(
+        child: ElevatedButton(
+          onPressed: () => context.router.push(CameraRoute()),
+          child: const Text('Camera Screen'),
         ),
       ),
+      // body: SingleChildScrollView(
+      //   child: Column(
+      //     mainAxisAlignment: MainAxisAlignment.center,
+      //     crossAxisAlignment: CrossAxisAlignment.center,
+      //     children: [
+      //       image.value != null
+      //           ? SizedBox(
+      //               height: 400,
+      //               width: 400,
+      //               child: Stack(
+      //                 fit: StackFit.expand,
+      //                 children: <Widget>[
+      //                   Image.file(image.value!),
+      //                 ],
+      //               ),
+      //             )
+      //           : const Icon(
+      //               Icons.image,
+      //               size: 200,
+      //             ),
+      //       const SizedBox(height: 8),
+      //       if (image.value != null)
+      //         Padding(
+      //           padding: const EdgeInsets.all(16.0),
+      //           child: Text(path.value == null ? '' : 'Image path: ${path.value}'),
+      //         ),
+      //       const SizedBox(height: 8),
+      //       if (outputText.value != null)
+      //         Padding(
+      //           padding: const EdgeInsets.all(16.0),
+      //           child: Text(outputText.value!),
+      //         ),
+      //     ],
+      //   ),
+      // ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => getImage(),
         tooltip: 'Increment',
