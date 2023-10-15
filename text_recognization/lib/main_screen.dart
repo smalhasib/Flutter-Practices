@@ -6,9 +6,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:image/image.dart' as img_pkg;
 import 'package:image_picker/image_picker.dart';
+import 'package:path/path.dart' show join;
+import 'package:path_provider/path_provider.dart';
 import 'package:text_recognization/app_manager.dart';
 import 'package:text_recognization/app_router.dart';
+import 'package:text_recognization/taken_photo.dart';
 import 'package:text_recognization/text_detector_painter.dart';
 
 @RoutePage()
@@ -18,7 +22,6 @@ class MainScreen extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final image = useState<File?>(null);
-    final path = useState<String?>(null);
 
     final outputText = useState<String?>(null);
     final canProcess = useState<bool>(true);
@@ -60,7 +63,6 @@ class MainScreen extends HookConsumerWidget {
 
     Future processFile(String path) async {
       image.value = File(path);
-      path = path;
       final inputImage = InputImage.fromFilePath(path);
       processImage(inputImage);
     }
@@ -72,54 +74,118 @@ class MainScreen extends HookConsumerWidget {
       }
     }
 
+    Size getCompatibleCropSize(
+        img_pkg.Image originalImage, Size imagePreviewSize, Size containerSize) {
+      final imageWidth = originalImage.width;
+      final imageHeight = originalImage.height;
+      if (imageWidth > imageHeight) {
+        final widthFactor = imageHeight / imagePreviewSize.width;
+        final heightFactor = imageWidth / imagePreviewSize.height;
+        return Size(containerSize.width * widthFactor, containerSize.height * heightFactor);
+      } else {
+        final widthFactor = imageWidth / imagePreviewSize.width;
+        final heightFactor = imageHeight / imagePreviewSize.height;
+        return Size(containerSize.width * widthFactor, containerSize.height * heightFactor);
+      }
+    }
+
+    Offset getCompatibleCropPosition(
+        img_pkg.Image originalImage, Size imagePreviewSize, Offset containerPosition) {
+      final imageWidth = originalImage.width;
+      final imageHeight = originalImage.height;
+      if (imageWidth > imageHeight) {
+        final widthFactor = imageHeight / imagePreviewSize.width;
+        final heightFactor = imageWidth / imagePreviewSize.height;
+        return Offset(widthFactor * containerPosition.dx, heightFactor * containerPosition.dy);
+      } else {
+        final widthFactor = imageWidth / imagePreviewSize.width;
+        final heightFactor = imageHeight / imagePreviewSize.height;
+        return Offset(widthFactor * containerPosition.dx, heightFactor * containerPosition.dy);
+      }
+    }
+
+    Future<String> cropImage(TakenPhoto takenPhoto) async {
+      final img = img_pkg.decodeJpg(File(takenPhoto.path).readAsBytesSync());
+      final originalImage = img_pkg.bakeOrientation(img!);
+
+      final cropSize = getCompatibleCropSize(
+        originalImage,
+        takenPhoto.imagePreviewSize,
+        takenPhoto.containerSize,
+      );
+      final cropPosition = getCompatibleCropPosition(
+        originalImage,
+        takenPhoto.imagePreviewSize,
+        takenPhoto.containerPosition,
+      );
+
+      final croppedImage = img_pkg.copyCrop(
+        originalImage,
+        x: cropPosition.dx.toInt(),
+        y: cropPosition.dy.toInt(),
+        width: cropSize.width.toInt(),
+        height: cropSize.height.toInt(),
+      );
+
+      final directory = await getApplicationCacheDirectory();
+      final path = join(directory.path, '${DateTime.now()}.png');
+      final file = await File(path).create(recursive: true);
+      file.writeAsBytesSync(img_pkg.encodePng(croppedImage));
+      return path;
+    }
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: const Text('Text Recognizer'),
       ),
-      body: Center(
-        child: ElevatedButton(
-          onPressed: () => context.router.push(CameraRoute()),
-          child: const Text('Camera Screen'),
-        ),
-      ),
-      // body: SingleChildScrollView(
-      //   child: Column(
-      //     mainAxisAlignment: MainAxisAlignment.center,
-      //     crossAxisAlignment: CrossAxisAlignment.center,
-      //     children: [
-      //       image.value != null
-      //           ? SizedBox(
-      //               height: 400,
-      //               width: 400,
-      //               child: Stack(
-      //                 fit: StackFit.expand,
-      //                 children: <Widget>[
-      //                   Image.file(image.value!),
-      //                 ],
-      //               ),
-      //             )
-      //           : const Icon(
-      //               Icons.image,
-      //               size: 200,
-      //             ),
-      //       const SizedBox(height: 8),
-      //       if (image.value != null)
-      //         Padding(
-      //           padding: const EdgeInsets.all(16.0),
-      //           child: Text(path.value == null ? '' : 'Image path: ${path.value}'),
-      //         ),
-      //       const SizedBox(height: 8),
-      //       if (outputText.value != null)
-      //         Padding(
-      //           padding: const EdgeInsets.all(16.0),
-      //           child: Text(outputText.value!),
-      //         ),
-      //     ],
-      //   ),
-      // ),
+      body: image.value == null
+          ? Center(
+              child: Container(
+                height: 100,
+                width: 200,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.primary,
+                    width: 2,
+                  ),
+                ),
+                child: const Center(
+                  child: Text(
+                    'No image selected',
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+            )
+          : SingleChildScrollView(
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      height: 200,
+                      width: MediaQuery.of(context).size.width * 0.9,
+                      child: Image.file(image.value!),
+                    ),
+                    const SizedBox(height: 8),
+                    if (outputText.value != null)
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Text(outputText.value!),
+                      ),
+                  ],
+                ),
+              ),
+            ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => getImage(),
+        onPressed: () async {
+          final takenPhoto = (await context.router.push(CameraRoute())) as TakenPhoto;
+          final path = await cropImage(takenPhoto);
+          processFile(path);
+        },
         tooltip: 'Increment',
         child: const Icon(Icons.camera_alt),
       ),
